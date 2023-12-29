@@ -16,7 +16,7 @@ Instrumentation is provided for the following packages, with the
 following caveats:
 
 - **github.com/rabbitmq/amqp091-go**: Client and server instrumentation. *Only supported
-  with Go 1.7 and later.*
+  with Go 1.16 and later.*
 
 ## Required Reading
 
