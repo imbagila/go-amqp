@@ -1,3 +1,3 @@
 // Package amqptracer provides OpenTracing instrumentation for the
-// github.com/streadway/amqp package.
+// github.com/rabbitmq/amqp091-go package.
 package amqptracer

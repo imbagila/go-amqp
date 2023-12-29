@@ -15,8 +15,8 @@ the future. You should vendor them to avoid spurious breakage.**
 Instrumentation is provided for the following packages, with the
 following caveats:
 
-- **github.com/streadway/amqp**: Client and server instrumentation. *Only supported
-  with Go 1.7 and later.*
+- **github.com/rabbitmq/amqp091-go**: Client and server instrumentation. *Only supported
+  with Go 1.16 and later.*
 
 ## Required Reading
 
@@ -34,49 +34,49 @@ between the producers and the consumers.
 #### Serializing to the wire
 
 ```go
-    func PublishMessage(
-        ctx context.Context,
-        ch *amqp.Channel,
-        immediate bool,
-        msg *amqp.Publishing,
-    ) error {
-        sp := opentracing.SpanFromContext(ctx)
-        defer sp.Finish()
+func PublishMessage(
+    ctx context.Context,
+    ch *amqp.Channel,
+    immediate bool,
+    msg *amqp.Publishing,
+) error {
+    sp := opentracing.SpanFromContext(ctx)
+    defer sp.Finish()
 
-        // Inject the span context into the AMQP header.
-        if err := amqptracer.Inject(sp, msg.Headers); err != nil {
-            return err
-        }
-
-        // Publish the message with the span context.
-        return ch.Publish(exchange, key, mandatory, immediate, msg)
+    // Inject the span context into the AMQP header.
+    if err := amqptracer.Inject(sp, msg.Headers); err != nil {
+        return err
     }
+
+    // Publish the message with the span context.
+    return ch.Publish(exchange, key, mandatory, immediate, msg)
+}
 ```
 
 #### Deserializing from the wire
 
 ```go
-    func ConsumeMessage(ctx context.Context, msg *amqp.Delivery) error {
-        // Extract the span context out of the AMQP header.
-        spCtx, _ := amqptracer.Extract(msg.Headers)
-        sp := opentracing.StartSpan(
-            "ConsumeMessage",
-            opentracing.FollowsFrom(spCtx),
-        )
-        defer sp.Finish()
+func ConsumeMessage(ctx context.Context, msg *amqp.Delivery) error {
+    // Extract the span context out of the AMQP header.
+    spCtx, _ := amqptracer.Extract(msg.Headers)
+    sp := opentracing.StartSpan(
+        "ConsumeMessage",
+        opentracing.FollowsFrom(spCtx),
+    )
+    defer sp.Finish()
 
-	// Update the context with the span for the subsequent reference.
-        ctx = opentracing.ContextWithSpan(ctx, sp)
+// Update the context with the span for the subsequent reference.
+    ctx = opentracing.ContextWithSpan(ctx, sp)
 
-        // Actual message processing.
-        return ProcessMessage(ctx, msg)
-    }
+    // Actual message processing.
+    return ProcessMessage(ctx, msg)
+}
 ```
 
 [OpenTracing project]: http://opentracing.io
 [terminology]: http://opentracing.io/documentation/pages/spec.html
 [OpenTracing API for Go]: https://github.com/opentracing/opentracing-go
-[AMQP]: https://github.com/streadway/amqp
+[AMQP]: https://github.com/rabbitmq/amqp091-go
 [Build Status]: https://travis-ci.org/opentracing-contrib/go-amqp.svg
 [GoDoc]: https://godoc.org/github.com/opentracing-contrib/go-amqp/amqptracer?status.svg
 [check godoc]: https://godoc.org/github.com/opentracing-contrib/go-amqp/amqptracer
